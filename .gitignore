@@ -1,5 +1,5 @@
 ## dataset ignore
-data/
+# data/
 venv/
 .data/
 *.pt
