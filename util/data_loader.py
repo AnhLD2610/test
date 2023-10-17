@@ -9,6 +9,8 @@ from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
 # from util.tokenizer import Tokenizer
 import pandas as pd 
+import torchtext.transforms as T
+
 
 class MyDataset(Dataset):
     def __init__(self, data):
@@ -71,7 +73,7 @@ class MyDataLoader:
                 # print(tokenized_text)
                 yield tokenized_text
         
-    # thay 32  = biến battch_size
+    # thay 32  = biến batch_size
     def build_vocab(self, train_iter, min_freq):
         source_vocab = build_vocab_from_iterator(
             self.getTokens(train_iter, 32),
@@ -89,6 +91,20 @@ class MyDataLoader:
         
         return source_vocab, vocab_size 
 
+    def getTransform(self, vocab):
+
+        text_tranform = T.Sequential(
+            ## converts the sentences to indices based on given vocabulary
+            T.VocabTransform(vocab=vocab),
+            ## Add <sos> at beginning of each sentence. 1 because the index for <sos> in vocabulary is
+            # 1 as seen in previous section
+            T.AddToken(1, begin=True),
+            ## Add <eos> at beginning of each sentence. 2 because the index for <eos> in vocabulary is
+            # 2 as seen in previous section
+            T.AddToken(2, begin=False)
+        )
+        return text_tranform
+    
     def make_iter(self, train, valid, test,  batch_size):
         train_iterator = DataLoader(train, batch_size=batch_size, shuffle = True, num_workers = 2, pin_memory = False)
         valid_iterator = DataLoader(valid, batch_size=batch_size, shuffle = True, num_workers = 2, pin_memory = False)

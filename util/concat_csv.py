@@ -2,9 +2,9 @@ import os
 import pandas as pd
 
 # Define file paths for the three CSV files
-body_file = "/home/aiotlab3/RISE/Lab-MA/DucAnh/SOTitle/data/C#/valid_body.csv"
-code_file = "/home/aiotlab3/RISE/Lab-MA/DucAnh/SOTitle/data/C#/valid_code.csv"
-title_file = "/home/aiotlab3/RISE/Lab-MA/DucAnh/SOTitle/data/C#/valid_title.csv"
+body_file = "/media/data/thanhnb/SOTitle/data/C#/train_body.csv"
+code_file = "/media/data/thanhnb/SOTitle/data/C#/train_code.csv"
+title_file = "/media/data/thanhnb/SOTitle/data/C#/train_title.csv"
 
 df_body = pd.read_csv(body_file)
 df_code = pd.read_csv(code_file)
@@ -12,7 +12,7 @@ df_title = pd.read_csv(title_file)
 
 merged_df = pd.concat([df_body, df_code, df_title], axis=1, keys=['body', 'code', 'title'])
 
-output_file = "/home/aiotlab3/RISE/Lab-MA/DucAnh/transformer/data/C#/valid.csv"
+output_file = "/media/data/thanhnb/test/data/C#/train.csv"
 
 # Check if the output file already exists
 if not os.path.exists(output_file):

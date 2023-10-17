@@ -11,12 +11,12 @@ from models.embedding.transformer_embedding import TransformerEmbedding
 
 
 class Decoder(nn.Module):
-    def __init__(self, dec_voc_size, max_len, d_model, ffn_hidden, n_head, n_layers, drop_prob, device):
+    def __init__(self, model, dec_voc_size, max_len, d_model, ffn_hidden, n_head, n_layers, drop_prob, device):
         super().__init__()
         self.emb = TransformerEmbedding(d_model=d_model,
+                                        model = model,
                                         drop_prob=drop_prob,
                                         max_len=max_len,
-                                        vocab_size=dec_voc_size,
                                         device=device)
 
         self.layers = nn.ModuleList([DecoderLayer(d_model=d_model,
@@ -28,6 +28,7 @@ class Decoder(nn.Module):
         self.linear = nn.Linear(d_model, dec_voc_size)
 
     def forward(self, trg, enc_src, trg_mask, src_mask):
+        # fix this
         trg = self.emb(trg)
 
         for layer in self.layers:

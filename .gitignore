@@ -5,3 +5,5 @@ venv/
 *.pt
 __pycache__
 result/
+util/__pycache__
+models/__pycache__

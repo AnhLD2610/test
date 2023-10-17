@@ -14,6 +14,12 @@ from models.model.transformer import Transformer
 from util.bleu import idx_to_word, get_bleu
 from util.epoch_timer import epoch_time
 
+from unixcoder import UniXcoder
+
+emb_model = UniXcoder("microsoft/unixcoder-base-nine")
+emb_model.to(device)
+
+
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -24,7 +30,8 @@ def initialize_weights(m):
         nn.init.kaiming_uniform(m.weight.data)
 
 
-model = Transformer(src_pad_idx=src_pad_idx,
+model = Transformer(model=emb_model,
+                    src_pad_idx=src_pad_idx,
                     trg_pad_idx=trg_pad_idx,
                     trg_sos_idx=trg_sos_idx,
                     d_model=d_model,
@@ -57,21 +64,36 @@ def train(model, iterator, optimizer, criterion, clip):
     model.train()
     epoch_loss = 0
     for i, batch in enumerate(iterator):
-        print(batch)
-        print(type(batch))
-        print(len(batch))
-        # src = batch.src
-        # trg = batch.trg
+        # print(batch)
+        # print(type(batch))
+        # print(len(batch))
         
+        # src shape [batch_size,max_length]
         des, code, title = batch[0], batch[1], batch[2]
 
+        # title = text_tranform(tokenizer.tokenize(title))
+        vocab_title = tuple(text_tranform(tokenizer.tokenize(element)) for element in title)
+        max_length = 0
+        for element in vocab_title:
+            max_length = max(max_length,len(element))
+        vocab_title = tuple(element+[1]*(max_length-len(element)) for element in vocab_title)
+        
+        x = tuple((' '.join(des[i].split()[:256]) + " <code> " + ' '.join(code[i].split()[:256])) for i in range (len(des)))
+        max_length = 0
+        for element in x:
+            max_length = max(max_length,len(text_tranform(tokenizer.tokenize(element))))
+        src = tuple(text_tranform(tokenizer.tokenize(element))+[1]*(max_length-len(text_tranform(tokenizer.tokenize(element)))) for element in x)
+        
         optimizer.zero_grad()
         # output = model(src, trg[:, :-1])
-        output = model(des, code, title)
+        # xem đoạn này 
+        output = model(x, src, vocab_title)
+        # out_put = [batch_size, seq_len, dec_voc_size]
         output_reshape = output.contiguous().view(-1, output.shape[-1])
-        trg = trg[:, 1:].contiguous().view(-1)
+        title = title[:, 1:].contiguous().view(-1)
 
-        loss = criterion(output_reshape, trg)
+        # output_reshape van giu nguyen nhung title thi de lai ve dang vector 
+        loss = criterion(output_reshape, vocab_title)
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), clip)
         optimizer.step()
@@ -88,13 +110,30 @@ def evaluate(model, iterator, criterion):
     batch_bleu = []
     with torch.no_grad():
         for i, batch in enumerate(iterator):
-            src = batch.src
-            trg = batch.trg
-            output = model(src, trg[:, :-1])
-            output_reshape = output.contiguous().view(-1, output.shape[-1])
-            trg = trg[:, 1:].contiguous().view(-1)
+            des, code, title = batch[0], batch[1], batch[2]
 
-            loss = criterion(output_reshape, trg)
+            # title = text_tranform(tokenizer.tokenize(title))
+            vocab_title = tuple(text_tranform(tokenizer.tokenize(element)) for element in title)
+            max_length = 0
+            for element in vocab_title:
+                max_length = max(max_length,len(element))
+            vocab_title = tuple(element+[1]*(max_length-len(element)) for element in vocab_title)
+            
+            x = tuple((' '.join(des[i].split()[:256]) + " <code> " + ' '.join(code[i].split()[:256])) for i in range (len(des)))
+            max_length = 0
+            for element in x:
+                max_length = max(max_length,len(text_tranform(tokenizer.tokenize(element))))
+            src = tuple(text_tranform(tokenizer.tokenize(element))+[1]*(max_length-len(text_tranform(tokenizer.tokenize(element)))) for element in x)
+            
+            optimizer.zero_grad()
+            # output = model(src, trg[:, :-1])
+            # xem đoạn này 
+            output = model(x, src, vocab_title)
+            # out_put = [batch_size, seq_len, dec_voc_size]
+            output_reshape = output.contiguous().view(-1, output.shape[-1])
+            title = title[:, 1:].contiguous().view(-1)
+            
+            loss = criterion(output_reshape, title)
             epoch_loss += loss.item()
 
             total_bleu = []

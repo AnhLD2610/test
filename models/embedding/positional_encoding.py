@@ -49,11 +49,11 @@ class PositionalEncoding(nn.Module):
 
         # compute positional encoding to consider positional information of words
 
-    def forward(self, x):
+    def forward(self, seq_len):
         # self.encoding
         # [max_len = 512, d_model = 512]
 
-        batch_size, seq_len = x.size()
+        # batch_size, seq_len = x.size()
         # [batch_size = 128, seq_len = 30]
 
         return self.encoding[:seq_len, :]
@@ -78,16 +78,16 @@ class PositionalEncoding(nn.Module):
 # print("Output shape (positional encodings added):", output.shape)
 
 
-d_model = 4
-max_len = 100
+# d_model = 4
+# max_len = 100
 
-# Create a sample input tensor (you can change the dimensions as needed)
-batch_size = 2
-seq_len = 3
-input_tensor = torch.randn(batch_size, seq_len, d_model)
-input_tensor1 = torch.randn(seq_len, d_model)
-print(input_tensor+input_tensor1)
-input = input_tensor+input_tensor1
-print(input.shape)
-print(input_tensor)
-print(input_tensor1)
+# # Create a sample input tensor (you can change the dimensions as needed)
+# batch_size = 2
+# seq_len = 3
+# input_tensor = torch.randn(batch_size, seq_len, d_model)
+# input_tensor1 = torch.randn(seq_len, d_model)
+# print(input_tensor+input_tensor1)
+# input = input_tensor+input_tensor1
+# print(input.shape)
+# print(input_tensor)
+# print(input_tensor1)
